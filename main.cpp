@@ -34,11 +34,11 @@ inline void swap(double *&T, const int i, const int j)
 	T[j] = temp;
 }
 
-void initialization(int N, Eigen::MatrixXd *&points)
+void initialization(int N, Eigen::MatrixXd *&points, double *values)
 {
 	double min = ELJ(N, points[0]), max_1 = min, max_2 = min;
 	int min_index = 0, max_1_index = 0, max_2_index = 0;
-	double *values = new double[N + 1];
+
 	values[0] = min;
 	for (size_t i = 1; i < N + 1; i++) {
 		values[i] = ELJ(N, points[i]);
@@ -72,8 +72,8 @@ void initialization(int N, Eigen::MatrixXd *&points)
 	}
 
 	swap(points, N - 1, max_2_index);
-
-	delete[] values;
+	swap(values, N - 1, max_2_index);
+	// delete[] values;
 }
 
 std::unique_ptr<Eigen::MatrixXd> centerMass(int N, Eigen::MatrixXd *&points)
@@ -97,11 +97,118 @@ std::unique_ptr<Eigen::MatrixXd> centerMass(int N, Eigen::MatrixXd *&points)
 	return cm;
 }
 
+int partition(Eigen::MatrixXd *&points, double *a, int l, int h)
+{
+	int R = rand() % (h - l + 1) + l;
+	swap(a, h, R);
+	swap(points, h, R);
+	int pivot = a[h];
+	int temp_right = l - 1;
+	for (int i = l; i <= h; i++) {
+		if (a[i] < pivot) {
+			temp_right++;
+			swap(a, temp_right, i);
+			swap(points, temp_right, i);
+		}
+	}
+
+	swap(a, temp_right + 1, h);
+	swap(points, temp_right + 1, h);
+
+	return temp_right + 1;
+}
+
+void quicksort(Eigen::MatrixXd *&points, double *a, int l, int h)
+{
+	if (l < h) {
+		int pivot_part = partition(points, a, l, h);
+
+		// print(a, n);
+		// if (pivot_part > 1) {
+		quicksort(points, a, l, pivot_part - 1);
+		// }
+		// if (pivot_part < h - 1) {
+		quicksort(points, a, pivot_part + 1, h);
+		// }
+	}
+}
+
+void shrinkSimplex(int N, Eigen::MatrixXd *&points, double *values)
+{
+	for (size_t i = 1; i < N + 1; i++) {
+		points[i] = points[0] - (points[i] - points[0]) * .5;
+		// values[i] = ELJ(N, points[i]);
+	}
+	// initialization(N, points, values);
+	quicksort(points, values, 0, N);
+}
+
 void NelderMead(int N, Eigen::MatrixXd *&points)
 {
-	initialization(N, points);
+	double *values = new double[N + 1];
+	for (size_t i = 0; i < N + 1; i++) {
+		values[i] = ELJ(N, points[i]);
+	}
 
-	std::unique_ptr<Eigen::MatrixXd> cm = centerMass(N, points);
+	// initialization(N, points, values);
+	quicksort(points, values, 0, N);
+
+	double r_inc = -.5;
+	double r_exc = .5;
+	double r_ref = 1;
+	double r_exp = 2;
+
+	int iterations = 0;
+	int maxIterations = 100000;
+	double real_val = -12.712062;
+	double acc = 0.001;
+	double of_value = ELJ(N, points[0]);
+	while (of_value > acc + real_val && iterations < maxIterations) {
+		std::unique_ptr<Eigen::MatrixXd> cm = centerMass(N, points);
+		Eigen::MatrixXd x_ref = (1 + r_ref) * (*cm) - r_ref * points[N];
+		double x_ref_val = ELJ(N, x_ref);
+		if (x_ref_val >= values[0] && x_ref_val < values[N - 1]) {
+			points[N] = x_ref;
+			values[N] = x_ref_val;
+		}
+		else if (x_ref_val < values[0]) {
+			Eigen::MatrixXd x_exp = (1 + r_exp) * (*cm) - r_exp * points[N];
+			double x_exp_val = ELJ(N, x_exp);
+			if (x_exp_val < x_ref_val) {
+				points[N] = x_exp;
+				values[N] = x_exp_val;
+			}
+			else {
+				points[N] = x_ref;
+				values[N] = x_ref_val;
+			}
+		}
+		else if (x_ref_val >= values[N - 1] && x_ref_val < values[N]) {
+			Eigen::MatrixXd x_exc = (1 + r_exc) * (*cm) - r_exc * points[N];
+			double x_exc_val = ELJ(N, x_exc);
+			if (x_exc_val <= x_ref_val) {
+				points[N] = x_exc;
+				values[N] = x_exc_val;
+			}
+		}
+		else if (values[N] <= x_ref_val) {
+			Eigen::MatrixXd x_inc = (1 + r_inc) * (*cm) - r_inc * points[N];
+			double x_inc_val = ELJ(N, x_inc);
+			if (x_inc_val < values[N]) {
+				points[N] = x_inc;
+				values[N] = x_inc_val;
+			}
+		}
+		else {
+			shrinkSimplex(N, points, values);
+		}
+
+		of_value = values[0];
+		std::cout << iterations << ": " << of_value << "\n";
+		iterations++;
+	}
+
+	delete[] values;
 }
 
 int main(int argc, char const *argv[])
