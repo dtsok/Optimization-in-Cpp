@@ -1,14 +1,15 @@
 #include <eigen3/Eigen/Dense>
 #include <iostream>
+#include <memory>
 
 double ELJ(int N, const Eigen::MatrixXd &X, double epsilon = 1, double sigma = 1)
 {
 	double sum = 0;
 	for (size_t i = 0; i < N - 1; i++) {
 		double temp = 0;
-		Eigen::VectorXd vector_1 = X(Eigen::all, i);
+		Eigen::VectorXd vector_1 = X(i, Eigen::all);
 		for (size_t j = i + 1; j < N; j++) {
-			Eigen::VectorXd vector_2 = X(Eigen::all, j);
+			Eigen::VectorXd vector_2 = X(j, Eigen::all);
 			double rij = (vector_1 - vector_2).norm();
 			double factor = std::pow((sigma / rij), 6);
 			temp += factor * factor - factor;
@@ -19,22 +20,21 @@ double ELJ(int N, const Eigen::MatrixXd &X, double epsilon = 1, double sigma = 1
 	return 4 * epsilon * sum;
 }
 
-void swap(Eigen::MatrixXd *&T, const int i, const int j)
+inline void swap(Eigen::MatrixXd *&T, const int i, const int j)
 {
 	Eigen::MatrixXd temp = T[i];
 	T[i] = T[j];
 	T[j] = temp;
 }
 
-
-void swap(double *&T, const int i, const int j)
+inline void swap(double *&T, const int i, const int j)
 {
 	double temp = T[i];
 	T[i] = T[j];
 	T[j] = temp;
 }
 
-void NelderMead(int N, Eigen::MatrixXd *&points)
+void initialization(int N, Eigen::MatrixXd *&points)
 {
 	double min = ELJ(N, points[0]), max_1 = min, max_2 = min;
 	int min_index = 0, max_1_index = 0, max_2_index = 0;
@@ -48,7 +48,6 @@ void NelderMead(int N, Eigen::MatrixXd *&points)
 		if (temp_ < min) {
 			min = temp_;
 			min_index = i;
-			// swap(points, i, min_index);
 		}
 		else if (temp_ >= max_1) {
 			max_1 = temp_;
@@ -71,19 +70,38 @@ void NelderMead(int N, Eigen::MatrixXd *&points)
 			max_2_index = i;
 		}
 	}
-	for (size_t i = 0; i < N + 1; i++) {
-		std::cout << "i " << i << " values[" << i << "] " << values[i] << " ELJ[" << i << "] " << ELJ(N, points[i]) << "\n";
-	}
 
 	swap(points, N - 1, max_2_index);
-	swap(values, N - 1, max_2_index);
-	std::cout << "\n\nMin = " << min << " index = " << min_index << "\n";
-	std::cout << "Max1 = " << max_1 << " index = " << max_1_index << "\n";
-	std::cout << "Max2 = " << max_2 << " index = " << max_2_index << "\n\n";
-	for (size_t i = 0; i < N + 1; i++) {
-		std::cout << "i " << i << " values[" << i << "] " << values[i] << " ELJ[" << i << "] " << ELJ(N, points[i]) << "\n";
-	}
+
 	delete[] values;
+}
+
+std::unique_ptr<Eigen::MatrixXd> centerMass(int N, Eigen::MatrixXd *&points)
+{
+	std::unique_ptr<Eigen::MatrixXd> cm(new Eigen::MatrixXd(N, 3));
+	for (int row = 0; row < N; row++) {
+		for (int col = 0; col < 3; col++) {
+			(*cm)(row, col) = 0;
+		}
+	}
+
+	for (int q = 0; q < N; q++) {
+
+		for (int row = 0; row < N; row++) {
+			for (int col = 0; col < 3; col++) {
+				(*cm)(row, col) += points[q](row, col);
+			}
+		}
+	}
+	(*cm) = (*cm) / N;
+	return cm;
+}
+
+void NelderMead(int N, Eigen::MatrixXd *&points)
+{
+	initialization(N, points);
+
+	std::unique_ptr<Eigen::MatrixXd> cm = centerMass(N, points);
 }
 
 int main(int argc, char const *argv[])
@@ -95,14 +113,13 @@ int main(int argc, char const *argv[])
 
 	// Eigen::MatrixXd cluster = Eigen::MatrixXd(N, 3);
 	// cluster << 0.7430002202, 0.2647603899, -0.0468575389, -0.7430002647, -0.2647604843, 0.0468569750, 0.1977276118, -0.4447220146,
-	// 0.6224700350, 	-0.1977281310, 0.4447221826, -0.6224697723, -0.1822009635, 0.5970484122, 0.4844363476, 0.1822015272, -0.5970484858,
-	// -0.4844360463; cluster.transposeInPlace(); Eigen::MatrixXd cluster = Eigen::MatrixXd::Random(3, N);
+	// 0.6224700350, -0.1977281310, 0.4447221826, -0.6224697723, -0.1822009635, 0.5970484122, 0.4844363476, 0.1822015272, -0.5970484858,
+	// -0.4844360463;
 	Eigen::MatrixXd *points = new Eigen::MatrixXd[N + 1];
 	for (int i = 0; i < N + 1; i++) {
-		points[i] = Eigen::MatrixXd::Random(3, N);
+		points[i] = Eigen::MatrixXd::Random(N, 3);
 	}
 
-	// std::cout << "N = " << N << "\nvalue = " << ELJ(N, points[1]) << "\n";
 	NelderMead(N, points);
 
 	delete[] points;
