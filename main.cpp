@@ -241,7 +241,7 @@ double ELJ(int N, const double *X, double epsilon = 1, double sigma = 1)
 	return 4 * epsilon * sum;
 }
 
-inline void swap(double *T, const int i, const int j)
+inline void swap(double *T, int i, int j)
 {
 	double temp = T[i];
 	T[i] = T[j];
@@ -271,20 +271,22 @@ int partition(double **points, double *values, int l, int h)
 {
 	// int R = rand() % (h - l + 1) + l;
 	int R = h;
-	swap(values, h, R);
-	swap(points, h, R);
-	int pivot = values[R];
+	double pivot = values[R];
 	int temp_right = l - 1;
 	for (int i = l; i <= h; i++) {
+
 		if (values[i] < pivot) {
 			temp_right++;
-			swap(values, temp_right, i);
-			swap(points, temp_right, i);
+			// swap(values, i, temp_right);
+			// swap(points, temp_right, i);
+			swap(values, i, temp_right);
+			std::swap(points[temp_right], points[i]);
 		}
 	}
 
 	swap(values, temp_right + 1, h);
-	swap(points, temp_right + 1, h);
+	// swap(points, temp_right + 1, h);
+	std::swap(points[temp_right + 1], points[h]);
 
 	return temp_right + 1;
 }
@@ -292,15 +294,11 @@ int partition(double **points, double *values, int l, int h)
 void quicksort(double **points, double *values, int l, int h)
 {
 	if (l < h) {
+
 		int pivot_part = partition(points, values, l, h);
 
-		// print(a, n);
-		// if (pivot_part > 1) {
 		quicksort(points, values, l, pivot_part - 1);
-		// }
-		// if (pivot_part < h - 1) {
 		quicksort(points, values, pivot_part + 1, h);
-		// }
 	}
 }
 
@@ -335,7 +333,7 @@ void NelderMead(int N, double **points)
 	for (size_t i = 0; i < N + 1; i++) {
 		values[i] = ELJ(N, points[i]);
 	}
-	std::cout<<"here\n";
+
 	quicksort(points, values, 0, N);
 
 	const double r_inc = -.5;
@@ -344,13 +342,13 @@ void NelderMead(int N, double **points)
 	const double r_exp = 2;
 
 	int iterations = 0;
-	int maxIterations = 100000;
+	int maxIterations = 10;
 	double real_val = -12.712062;
 	double acc = 0.001;
 	double of_value = values[0];
-	while (of_value > acc + real_val && iterations < maxIterations) {		
+	while (of_value > acc + real_val && iterations < maxIterations) {
 		centerMass(N, points, cm);
-		generate_point(x_ref, points[N], cm, N, r_ref);		
+		generate_point(x_ref, points[N], cm, N, r_ref);
 		double x_ref_val = ELJ(N, x_ref);
 		if (x_ref_val >= values[0] && x_ref_val < values[N - 1]) {
 			points[N] = x_ref;
@@ -389,20 +387,21 @@ void NelderMead(int N, double **points)
 		}
 		else {
 			shrinkSimplex(N, points, values);
-		}		
+		}
 		quicksort(points, values, 0, N);
-		
-		of_value = values[0];
+
+		of_value = values[N];
 		std::cout << iterations << ": " << of_value << "\n";
 		iterations++;
 	}
 
-	delete[] values;
-	delete[] cm;
-	delete[] x_inc;
-	delete[] x_ref;
-	delete[] x_exc;
-	delete[] x_exp;
+	// delete[] values;
+	// delete[] cm;
+	// delete[] x_inc;
+	// delete[] x_ref;
+	// delete[] x_exc;
+	// delete[] x_exp;
+	// return ;
 }
 
 int main(int argc, char const *argv[])
@@ -450,10 +449,11 @@ int main(int argc, char const *argv[])
 	std::cout << "Time " << duration_cast<milliseconds>(t2 - t1).count() << "\n";*/
 	for (size_t t = 0; t < N + 1; t++) {
 		p[t] = new double[3 * N];
-		for (size_t z = 0; z < 3 * N; z++) {			
+		for (size_t z = 0; z < 3 * N; z++) {
 			p[t][z] = dist(generator);
 		}
 	}
+
 	NelderMead(N, p);
 
 	// delete[] points;
