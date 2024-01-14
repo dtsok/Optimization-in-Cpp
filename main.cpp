@@ -99,10 +99,11 @@ std::unique_ptr<Eigen::MatrixXd> centerMass(int N, Eigen::MatrixXd *&points)
 
 int partition(Eigen::MatrixXd *&points, double *a, int l, int h)
 {
-	int R = rand() % (h - l + 1) + l;
+	// int R = rand() % (h - l + 1) + l;
+	int R = h;
 	swap(a, h, R);
 	swap(points, h, R);
-	int pivot = a[h];
+	int pivot = a[R];
 	int temp_right = l - 1;
 	for (int i = l; i <= h; i++) {
 		if (a[i] < pivot) {
