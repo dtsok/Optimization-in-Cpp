@@ -4,6 +4,8 @@
 #include <memory>
 #include <random>
 using namespace std::chrono;
+std::default_random_engine generator;
+std::uniform_real_distribution<double> dist(-2.5, 2.5);
 
 /*double ELJ(int N, const Eigen::MatrixXd &X, double epsilon = 1, double sigma = 1)
 {
@@ -225,6 +227,15 @@ double l2_norm(const int N, const double *X, const int i, const int j)
 	return std::sqrt(val);
 }
 
+double l2_norm_gen(const int N, const double *x, const double *y)
+{
+	double val = 0;
+	for (size_t i = 0; i < 3 * N; i++) {
+		val += (x[i] - y[i]) * (x[i] - y[i]);
+	}
+	return std::sqrt(val);
+}
+
 double ELJ(const int N, const double *X, const double epsilon = 1, const double sigma = 1)
 {
 	double sum = 0;
@@ -319,6 +330,18 @@ void shrinkSimplex(const int N, double **points, double *values)
 			points[i][j] = points[0][j] - (points[i][j] - points[0][j]) * .5;
 		}
 	}
+
+	for (size_t i = 1; i < N + 1; i++) {
+		values[i] = ELJ(N, points[i]);
+	}
+}
+
+bool checkBeforeFree(double *point2delete, double *x1, double *x2, double *x3, double *x4)
+{
+	if (point2delete == x1 || point2delete == x2 || point2delete == x3 || point2delete == x4) {
+		return false;
+	}
+	return true;
 }
 
 void freePoints(double **points, double *other, const int N)
@@ -327,9 +350,24 @@ void freePoints(double **points, double *other, const int N)
 		if (points[i] == other) {
 			// std::cout<<points[i]<<" "<<other<<"\n\n\n";
 			// delete[] points[i];
-			points[i] = nullptr;			
+			points[i] = nullptr;
 			// break;
 		}
+	}
+}
+
+void resetPoints(double **points, double *values, const int N)
+{
+	if (l2_norm_gen(N, points[0], points[N]) < 0.0000000001) {
+		std::cout << "Here\n";
+
+		for (size_t t = 0; t < N + 1; t++) {
+			for (size_t z = 0; z < 3 * N; z++) {
+				points[t][z] = dist(generator);
+			}
+			values[t] = ELJ(N, points[t]);
+		}
+		quicksort(points, values, 0, N);
 	}
 }
 
@@ -341,29 +379,38 @@ void NelderMead(const int N, double **points)
 	double *x_ref = new double[3 * N]();
 	double *x_exc = new double[3 * N]();
 	double *x_exp = new double[3 * N]();
-	
+
 	for (size_t i = 0; i < N + 1; i++) {
 		values[i] = ELJ(N, points[i]);
 	}
 
 	quicksort(points, values, 0, N);
 
-	const double r_inc = -.5;
-	const double r_exc = .5;
+	const double r_inc = -0.5;
+	const double r_exc = 0.5;
 	const double r_ref = 1;
 	const double r_exp = 2;
 
+	int inc_counter = 0;
+	int exc_counter = 0;
+	int ref_counter = 0;
+	int exp_counter = 0;
+
 	int iterations = 0;
-	const int maxIterations = 100000;
+	const int maxIterations = 1000000;
 	const double real_val = -12.712062;
 	const double acc = 0.001;
 	double of_value = values[0];
 	while (of_value > acc + real_val && iterations < maxIterations) {
+		// resetPoints(points, values, N);
 		centerMass(N, points, cm);
 		generate_point(x_ref, points[N], cm, N, r_ref);
 		double x_ref_val = ELJ(N, x_ref);
 		if (x_ref_val >= values[0] && x_ref_val < values[N - 1]) {
-			delete[] points[N];
+			// delete[] points[N];
+			if (checkBeforeFree(points[N], x_ref, x_exp, x_exc, x_inc)) {
+				delete[] points[N];
+			}
 			points[N] = x_ref;
 			values[N] = x_ref_val;
 		}
@@ -372,12 +419,18 @@ void NelderMead(const int N, double **points)
 			generate_point(x_exp, points[N], cm, N, r_exp);
 			double x_exp_val = ELJ(N, x_exp);
 			if (x_exp_val < x_ref_val) {
-				delete[] points[N];
+				// delete[] points[N];
+				if (checkBeforeFree(points[N], x_ref, x_exp, x_exc, x_inc)) {
+					delete[] points[N];
+				}
 				points[N] = x_exp;
 				values[N] = x_exp_val;
 			}
 			else {
-				delete[] points[N];
+				// delete[] points[N];
+				if (checkBeforeFree(points[N], x_ref, x_exp, x_exc, x_inc)) {
+					delete[] points[N];
+				}
 				points[N] = x_ref;
 				values[N] = x_ref_val;
 			}
@@ -387,9 +440,20 @@ void NelderMead(const int N, double **points)
 			generate_point(x_exc, points[N], cm, N, r_exc);
 			double x_exc_val = ELJ(N, x_exc);
 			if (x_exc_val <= x_ref_val) {
-				delete[] points[N];
+				// delete[] points[N];
+				if (checkBeforeFree(points[N], x_ref, x_exp, x_exc, x_inc)) {
+					delete[] points[N];
+				}
 				points[N] = x_exc;
 				values[N] = x_exc_val;
+			}
+			else {
+				// delete[] points[N];
+				if (checkBeforeFree(points[N], x_ref, x_exp, x_exc, x_inc)) {
+					delete[] points[N];
+				}
+				points[N] = x_ref;
+				values[N] = x_ref_val;
 			}
 		}
 		else if (values[N] <= x_ref_val) {
@@ -397,24 +461,28 @@ void NelderMead(const int N, double **points)
 			generate_point(x_inc, points[N], cm, N, r_inc);
 			double x_inc_val = ELJ(N, x_inc);
 			if (x_inc_val < values[N]) {
-				delete[] points[N];
+				// delete[] points[N];
+				if (checkBeforeFree(points[N], x_ref, x_exp, x_exc, x_inc)) {
+					delete[] points[N];
+				}
 				points[N] = x_inc;
 				values[N] = x_inc_val;
 			}
+			else {
+				shrinkSimplex(N, points, values);
+			}
 		}
-		else {
-			shrinkSimplex(N, points, values);
-		}
+
 		quicksort(points, values, 0, N);
 
-		of_value = values[0];
+		of_value = values[N];
 		std::cout << iterations << ": " << of_value << "\n";
 		iterations++;
 	}
 
 	delete[] values;
 	delete[] cm;
-	
+
 	freePoints(points, x_inc, N);
 	freePoints(points, x_ref, N);
 	freePoints(points, x_exc, N);
@@ -439,8 +507,8 @@ int main(int argc, char const *argv[])
 	else {
 		return 0;
 	}
-	std::default_random_engine generator;
-	std::uniform_real_distribution<double> dist(-2.5, 2.5);
+	// std::default_random_engine generator;
+	// std::uniform_real_distribution<double> dist(-2.5, 2.5);
 
 	// Eigen::MatrixXd cluster = Eigen::MatrixXd(N, 3);
 	// cluster << 0.7430002202, 0.2647603899, -0.0468575389, -0.7430002647, -0.2647604843, 0.0468569750, 0.1977276118, -0.4447220146,
