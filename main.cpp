@@ -211,7 +211,7 @@ void NelderMead(int N, Eigen::MatrixXd *&points)
 
 /* With arrays */
 
-double l2_norm(int N, const double *X, const int i, const int j)
+double l2_norm(const int N, const double *X, const int i, const int j)
 {
 	if (std::abs(i - j) < 3) {
 		std::cout << "Error @ l2_norm\n";
@@ -225,7 +225,7 @@ double l2_norm(int N, const double *X, const int i, const int j)
 	return std::sqrt(val);
 }
 
-double ELJ(int N, const double *X, double epsilon = 1, double sigma = 1)
+double ELJ(const int N, const double *X, const double epsilon = 1, const double sigma = 1)
 {
 	double sum = 0;
 	for (size_t i = 0; i < 3 * N - 3; i += 3) {
@@ -241,7 +241,7 @@ double ELJ(int N, const double *X, double epsilon = 1, double sigma = 1)
 	return 4 * epsilon * sum;
 }
 
-inline void swap(double *T, int i, int j)
+inline void swap(double *T, const int i, const int j)
 {
 	double temp = T[i];
 	T[i] = T[j];
@@ -255,7 +255,7 @@ inline void swap(double **T, const int i, const int j)
 	T[j] = temp;
 }
 
-void centerMass(int N, double **points, double *cm)
+void centerMass(const int N, double **points, double *cm)
 {
 	for (size_t i = 0; i < 3 * N; i++) {
 		cm[i] = 0;
@@ -302,7 +302,7 @@ void quicksort(double **points, double *values, int l, int h)
 	}
 }
 
-void generate_point(double *x_op, double *worst, double *cm, int N, double r_op)
+void generate_point(double *x_op, const double *worst, double *cm, const int N, const double r_op)
 {
 	/*for (size_t i = 0; i < 3 * N; i++) {
 		x_ref[i] = 0;
@@ -312,7 +312,7 @@ void generate_point(double *x_op, double *worst, double *cm, int N, double r_op)
 	}
 }
 
-void shrinkSimplex(int N, double **points, double *values)
+void shrinkSimplex(const int N, double **points, double *values)
 {
 	for (size_t i = 1; i < N + 1; i++) {
 		for (size_t j = 0; j < 3 * N; j++) {
@@ -321,7 +321,19 @@ void shrinkSimplex(int N, double **points, double *values)
 	}
 }
 
-void NelderMead(int N, double **points)
+void freePoints(double **points, double *other, const int N)
+{
+	for (size_t i = 0; i < N + 1; i++) {
+		if (points[i] == other) {
+			// std::cout<<points[i]<<" "<<other<<"\n\n\n";
+			// delete[] points[i];
+			points[i] = nullptr;			
+			// break;
+		}
+	}
+}
+
+void NelderMead(const int N, double **points)
 {
 	double *values = new double[N + 1]();
 	double *cm = new double[3 * N]();
@@ -329,7 +341,7 @@ void NelderMead(int N, double **points)
 	double *x_ref = new double[3 * N]();
 	double *x_exc = new double[3 * N]();
 	double *x_exp = new double[3 * N]();
-
+	
 	for (size_t i = 0; i < N + 1; i++) {
 		values[i] = ELJ(N, points[i]);
 	}
@@ -342,15 +354,16 @@ void NelderMead(int N, double **points)
 	const double r_exp = 2;
 
 	int iterations = 0;
-	int maxIterations = 10;
-	double real_val = -12.712062;
-	double acc = 0.001;
+	const int maxIterations = 100000;
+	const double real_val = -12.712062;
+	const double acc = 0.001;
 	double of_value = values[0];
 	while (of_value > acc + real_val && iterations < maxIterations) {
 		centerMass(N, points, cm);
 		generate_point(x_ref, points[N], cm, N, r_ref);
 		double x_ref_val = ELJ(N, x_ref);
 		if (x_ref_val >= values[0] && x_ref_val < values[N - 1]) {
+			delete[] points[N];
 			points[N] = x_ref;
 			values[N] = x_ref_val;
 		}
@@ -359,10 +372,12 @@ void NelderMead(int N, double **points)
 			generate_point(x_exp, points[N], cm, N, r_exp);
 			double x_exp_val = ELJ(N, x_exp);
 			if (x_exp_val < x_ref_val) {
+				delete[] points[N];
 				points[N] = x_exp;
 				values[N] = x_exp_val;
 			}
 			else {
+				delete[] points[N];
 				points[N] = x_ref;
 				values[N] = x_ref_val;
 			}
@@ -372,6 +387,7 @@ void NelderMead(int N, double **points)
 			generate_point(x_exc, points[N], cm, N, r_exc);
 			double x_exc_val = ELJ(N, x_exc);
 			if (x_exc_val <= x_ref_val) {
+				delete[] points[N];
 				points[N] = x_exc;
 				values[N] = x_exc_val;
 			}
@@ -381,6 +397,7 @@ void NelderMead(int N, double **points)
 			generate_point(x_inc, points[N], cm, N, r_inc);
 			double x_inc_val = ELJ(N, x_inc);
 			if (x_inc_val < values[N]) {
+				delete[] points[N];
 				points[N] = x_inc;
 				values[N] = x_inc_val;
 			}
@@ -390,17 +407,26 @@ void NelderMead(int N, double **points)
 		}
 		quicksort(points, values, 0, N);
 
-		of_value = values[N];
+		of_value = values[0];
 		std::cout << iterations << ": " << of_value << "\n";
 		iterations++;
 	}
 
-	// delete[] values;
-	// delete[] cm;
-	// delete[] x_inc;
-	// delete[] x_ref;
-	// delete[] x_exc;
-	// delete[] x_exp;
+	delete[] values;
+	delete[] cm;
+	
+	freePoints(points, x_inc, N);
+	freePoints(points, x_ref, N);
+	freePoints(points, x_exc, N);
+	freePoints(points, x_exp, N);
+	delete[] x_inc;
+	// x_inc = nullptr;
+	delete[] x_ref;
+	// x_ref = nullptr;
+	delete[] x_exc;
+	// x_exc = nullptr;
+	delete[] x_exp;
+	// x_exp = nullptr;
 	// return ;
 }
 
@@ -458,7 +484,10 @@ int main(int argc, char const *argv[])
 
 	// delete[] points;
 	for (size_t t = 0; t < N + 1; t++) {
-		delete[] p[t];
+		if (p[t] != nullptr) {
+			delete[] p[t];
+			p[t] = nullptr;
+		}
 	}
 	delete[] p;
 	return 0;
