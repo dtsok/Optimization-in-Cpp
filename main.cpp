@@ -27,7 +27,7 @@ inline void swap(Eigen::MatrixXd *&T, const int i, const int j)
 	T[j] = temp;
 }
 
-inline void swap(double *&T, const int i, const int j)
+inline void swap(double *T, const int i, const int j)
 {
 	double temp = T[i];
 	T[i] = T[j];
@@ -101,9 +101,9 @@ int partition(Eigen::MatrixXd *&points, double *a, int l, int h)
 {
 	// int R = rand() % (h - l + 1) + l;
 	int R = h;
-	swap(a, h, R);
-	swap(points, h, R);
-	int pivot = a[R];
+	// swap(a, h, R);
+	// swap(points, h, R);
+	double pivot = a[R];
 	int temp_right = l - 1;
 	for (int i = l; i <= h; i++) {
 		if (a[i] < pivot) {
@@ -141,7 +141,7 @@ void shrinkSimplex(int N, Eigen::MatrixXd *&points, double *values)
 		// values[i] = ELJ(N, points[i]);
 	}
 	// initialization(N, points, values);
-	quicksort(points, values, 0, N);
+	// quicksort(points, values, 0, N);
 }
 
 void NelderMead(int N, Eigen::MatrixXd *&points)
@@ -160,7 +160,7 @@ void NelderMead(int N, Eigen::MatrixXd *&points)
 	double r_exp = 2;
 
 	int iterations = 0;
-	int maxIterations = 100000;
+	int maxIterations = 100;
 	double real_val = -12.712062;
 	double acc = 0.001;
 	double of_value = ELJ(N, points[0]);
@@ -203,8 +203,8 @@ void NelderMead(int N, Eigen::MatrixXd *&points)
 		else {
 			shrinkSimplex(N, points, values);
 		}
-
-		of_value = values[0];
+		quicksort(points, values, 0, N);
+		of_value = values[N];
 		std::cout << iterations << ": " << of_value << "\n";
 		iterations++;
 	}
