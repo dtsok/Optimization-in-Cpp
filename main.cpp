@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <iostream>
 #include <random>
 
@@ -78,6 +79,7 @@ void quicksort(double **points, double *values, int l, int h)
 void generate_point(double *x_op, const double *worst, double *cm, const int N, const double r_op)
 {
 	for (size_t i = 0; i < N; i++) {
+		// x_op[i] = 0;
 		x_op[i] = (1 + r_op) * cm[i] - r_op * worst[i];
 	}
 }
@@ -136,9 +138,10 @@ void NelderMead(const int N, double **points)
 	int exc_counter = 0;
 	int ref_counter = 0;
 	int exp_counter = 0;
+	int shr_counter = 0;
 
 	int iterations = 0;
-	const int maxIterations = 500000;
+	const int maxIterations = 500001;
 	const double real_val = -9.10385;
 	const double acc = 0.001;
 	double of_value = values[0];
@@ -153,6 +156,7 @@ void NelderMead(const int N, double **points)
 			}
 			points[N] = x_ref;
 			values[N] = x_ref_val;
+			ref_counter++;
 		}
 		else if (x_ref_val < values[0]) {
 			generate_point(x_exp, points[N], cm, N, r_exp);
@@ -163,6 +167,7 @@ void NelderMead(const int N, double **points)
 				}
 				points[N] = x_exp;
 				values[N] = x_exp_val;
+				exp_counter++;
 			}
 			else {
 				if (checkBeforeFree(points[N], x_ref, x_exp, x_exc, x_inc)) {
@@ -170,6 +175,7 @@ void NelderMead(const int N, double **points)
 				}
 				points[N] = x_ref;
 				values[N] = x_ref_val;
+				ref_counter++;
 			}
 		}
 		else if (x_ref_val >= values[N - 1] && x_ref_val < values[N]) {
@@ -181,6 +187,7 @@ void NelderMead(const int N, double **points)
 				}
 				points[N] = x_exc;
 				values[N] = x_exc_val;
+				exc_counter++;
 			}
 			else {
 				if (checkBeforeFree(points[N], x_ref, x_exp, x_exc, x_inc)) {
@@ -188,6 +195,7 @@ void NelderMead(const int N, double **points)
 				}
 				points[N] = x_ref;
 				values[N] = x_ref_val;
+				ref_counter++;
 			}
 		}
 		else if (values[N] <= x_ref_val) {
@@ -199,9 +207,11 @@ void NelderMead(const int N, double **points)
 				}
 				points[N] = x_inc;
 				values[N] = x_inc_val;
+				inc_counter++;
 			}
 			else {
 				shrinkSimplex(N, points, values);
+				shr_counter++;
 			}
 		}
 
@@ -214,7 +224,8 @@ void NelderMead(const int N, double **points)
 		std::cout << iterations << ": " << of_value << " global: " << g_minimum << "\n";
 		iterations++;
 	}
-
+	std::cout << "counters:\nreflections " << ref_counter << "\nexpansions " << exp_counter << "\ncontractions " << exc_counter
+			  << "\ninner contractions " << inc_counter << "\n";
 	delete[] values;
 	delete[] cm;
 
@@ -242,7 +253,7 @@ int main(int argc, char const *argv[])
 	else {
 		return 0;
 	}
-
+	
 	int dim = 3 * N;
 	double **p = new double *[dim + 1]; //{0.7430002202, 0.2647603899, -0.0468575389, -0.7430002647, -0.2647604843, 0.0468569750, 0.1977276118,
 										//-0.4447220146, 0.6224700350,
