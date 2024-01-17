@@ -5,7 +5,7 @@
 std::default_random_engine generator(time(0));
 std::uniform_real_distribution<float> dist(-2.5, 2.5);
 
-const int maxIterations = 10000;
+const int maxIterations = 100000;
 const float real_val = -12.712f;
 const float acc = 0.001f;
 int reset_counter = 0;
