@@ -24,6 +24,13 @@ NelderMead::~NelderMead()
 	delete[] best_point;
 }
 
+void NelderMead::initialize(int iter, float acc, float real)
+{
+	maxIterations = iter;
+	acc = acc;
+	real_val = real;
+}
+
 void NelderMead::centerMass()
 {
 	for (size_t i = 0; i < N; i++) {
@@ -104,7 +111,7 @@ void NelderMead::resetSimplex()
 		reset_counter++;
 		for (size_t t = 0; t < N + 1; t++) {
 			for (size_t z = 0; z < N; z++) {
-				simplex[t][z] = RandomGenerator::generateFloat(-2.5f,2.5f);
+				simplex[t][z] = RandomGenerator::generateFloat(-2.5f, 2.5f);
 			}
 		}
 	}
@@ -189,12 +196,12 @@ void NelderMead::minimize()
 		if (of_value < g_minimum) {
 			g_minimum = of_value;
 			std::copy(simplex[0], simplex[0] + N, best_point);
-            std::cout << iterations << ": " << of_value << " global: " << g_minimum << "\n";
 		}
 
-		// std::cout << iterations << ": " << of_value << " global: " << g_minimum << "\n";
+		std::cout << iterations << ": " << of_value << " global: " << g_minimum << "\n";
 		iterations++;
 	}
 	std::cout << "~~~~~~~~~~~~~~~~~~~\ncounters:\nreflections " << ref_counter << "\nexpansions " << exp_counter << "\ncontractions "
-			  << exc_counter << "\ninner contractions " << inc_counter << "\nresets " << reset_counter << "\n";
+			  << exc_counter << "\ninner contractions " << inc_counter << "\nresets " << reset_counter << "\n\nminimum found: " << g_minimum
+			  << "\nglobal minimun known: " << real_val << "\n";
 }

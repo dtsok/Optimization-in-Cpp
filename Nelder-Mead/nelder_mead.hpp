@@ -1,10 +1,14 @@
 #ifndef NELDER_MEAD_HPP_
 #define NELDER_MEAD_HPP_
 
-#include "../common_file.hpp"
+#include "../common/common_file.hpp"
 
 class NelderMead {
 	private:
+	int maxIterations;
+	float acc;
+	float real_val;
+
 	float **simplex;
 	float (*function)(const int, const float *);
 	int N;
@@ -43,11 +47,11 @@ class NelderMead {
 	void resetSimplex();
 
 	public:
-	  
-    NelderMead( int dimensions, float **points, float (*func)(const int , const float *));
+	NelderMead(int dimensions, float **points, float (*func)(const int, const float *));
+	void initialize(int iter, float acc, float real);
 	~NelderMead();
 
-    void minimize();
+	void minimize();
 };
 
-#endif
+#endif // NELDER_MEAD_HPP_
