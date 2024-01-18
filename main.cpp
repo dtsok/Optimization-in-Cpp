@@ -1,8 +1,6 @@
-#include <algorithm>
-#include <iostream>
-#include <random>
+#include "Nelder-Mead/nelder_mead.hpp"
 
-std::default_random_engine generator(time(0));
+/*std::default_random_engine generator(time(0));
 std::uniform_real_distribution<float> dist(-2.5, 2.5);
 
 const int maxIterations = 100000;
@@ -244,7 +242,7 @@ void NelderMead(const int N, float **points)
 	delete[] x_exp;
 	delete[] best_point;
 }
-
+*/
 int main(int argc, char const *argv[])
 {
 	int N = 1;
@@ -260,11 +258,13 @@ int main(int argc, char const *argv[])
 	for (size_t t = 0; t < dim + 1; t++) {
 		p[t] = new float[dim];
 		for (size_t z = 0; z < dim; z++) {
-			p[t][z] = dist(generator);
+			p[t][z] = RandomGenerator::generateFloat(-2.5f, 2.5f);
 		}
 	}
 
-	NelderMead(dim, p);
+	// NelderMead(dim, p);
+	NelderMead obj = NelderMead(dim, p, &ELJ);
+	obj.minimize();
 
 	for (size_t t = 0; t < dim + 1; t++) {
 		if (p[t] != nullptr) {
