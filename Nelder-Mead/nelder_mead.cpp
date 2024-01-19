@@ -11,12 +11,6 @@ NelderMead::~NelderMead()
 {
 	delete[] values;
 	delete[] cm;
-
-	checkBeforeFree(x_inc);
-	checkBeforeFree(x_ref);
-	checkBeforeFree(x_exc);
-	checkBeforeFree(x_exp);
-
 	delete[] x_inc;
 	delete[] x_ref;
 	delete[] x_exc;
