@@ -8,17 +8,17 @@ float RandomGenerator::generateFloat(float l, float h)
 	return dist(generator);
 }
 
-float l2_norm(const float *X, const int i, const int j)
+float l2_norm(const float *X, const size_t i, const size_t j)
 {
 	float val = 0;
-	for (int z = 0; z < 3; z++) {
+	for (size_t z = 0; z < 3; z++) {
 		val += (X[i + z] - X[j + z]) * (X[i + z] - X[j + z]);
 	}
 
 	return std::sqrt(val);
 }
 
-float l2_norm_gen(float *x, float *y, const int N)
+float l2_norm_gen(float *x, float *y, const size_t N)
 {
 	float val = 0;
 	for (size_t i = 0; i < N; i++) {
@@ -27,7 +27,7 @@ float l2_norm_gen(float *x, float *y, const int N)
 	return std::sqrt(val);
 }
 
-float ELJ(const int N, const float *X)
+float ELJ(const size_t N, const float *X)
 {
 	float sum = 0;
 	for (size_t i = 0; i < N - 3; i += 3) {

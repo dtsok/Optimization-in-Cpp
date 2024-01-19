@@ -1,6 +1,6 @@
 #include "nelder_mead.hpp"
 
-NelderMead::NelderMead(const int dimensions, float **points, float (*func)(const int, const float *))
+NelderMead::NelderMead(const size_t dimensions, float **points, float (*func)(const size_t, const float *))
 {
 	simplex = points;
 	N = dimensions;
@@ -24,10 +24,10 @@ NelderMead::~NelderMead()
 	delete[] best_point;
 }
 
-void NelderMead::initialize(int iter, float acc, float real)
+void NelderMead::setParameters(size_t iter, float accuracy, float real)
 {
 	maxIterations = iter;
-	acc = acc;
+	acc = accuracy;
 	real_val = real;
 }
 

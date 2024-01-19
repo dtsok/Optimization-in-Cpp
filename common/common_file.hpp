@@ -5,11 +5,11 @@
 #include <iostream>
 #include <random>
 
-float l2_norm(const float *X, const int i, const int j);
+float l2_norm(const float *X, const size_t i, const size_t j);
 
-float l2_norm_gen(float *x, float *y, const int N);
+float l2_norm_gen(float *x, float *y, const size_t N);
 
-float ELJ(const int N, const float *X);
+float ELJ(const size_t N, const float *X);
 
 class RandomGenerator {
 	public:

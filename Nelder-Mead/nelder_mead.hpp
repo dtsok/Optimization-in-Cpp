@@ -5,20 +5,20 @@
 
 class NelderMead {
 	private:
-	int maxIterations;
+	size_t maxIterations;
 	float acc;
 	float real_val;
 
 	float **simplex;
-	float (*function)(const int, const float *);
-	int N;
+	float (*function)(const size_t, const float *);
+	size_t N;
 
 	const float r_inc = -0.5f;
 	const float r_exc = 0.5f;
 	const float r_ref = 1.0f;
 	const float r_exp = 2.0f;
 
-	int iterations = 0;
+	size_t iterations = 0;
 	int inc_counter = 0;
 	int exc_counter = 0;
 	int ref_counter = 0;
@@ -47,8 +47,8 @@ class NelderMead {
 	void resetSimplex();
 
 	public:
-	NelderMead(int dimensions, float **points, float (*func)(const int, const float *));
-	void initialize(int iter, float acc, float real);
+	NelderMead(size_t dimensions, float **points, float (*func)(const size_t, const float *));
+	void setParameters(size_t iter, float acc, float real);
 	~NelderMead();
 
 	void minimize();

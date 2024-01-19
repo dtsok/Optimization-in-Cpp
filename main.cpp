@@ -2,7 +2,7 @@
 
 int main(int argc, char const *argv[])
 {
-	int N = 1;
+	size_t N = 1;
 	if (argc > 1) {
 		N = std::stoi(argv[1]);
 	}
@@ -10,11 +10,11 @@ int main(int argc, char const *argv[])
 		return 0;
 	}
 
-	int maxIterations = 1000;
+	size_t maxIterations = 4000000;
 	float acc = 0.001f;
-	float real_val = -9.1038f;
+	float real_val = -159.1038f;
 
-	int dim = 3 * N;
+	size_t dim = 3 * N;
 	float **p = new float *[dim + 1];
 	for (size_t t = 0; t < dim + 1; t++) {
 		p[t] = new float[dim];
@@ -24,7 +24,7 @@ int main(int argc, char const *argv[])
 	}
 
 	NelderMead obj = NelderMead(dim, p, &ELJ);
-	obj.initialize(maxIterations, acc, real_val);
+	obj.setParameters(maxIterations, acc, real_val);
 	obj.minimize();
 
 	for (size_t t = 0; t < dim + 1; t++) {
