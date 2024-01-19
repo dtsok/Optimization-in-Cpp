@@ -10,9 +10,9 @@ int main(int argc, char const *argv[])
 		return 0;
 	}
 
-	size_t maxIterations = 4000;
+	size_t maxIterations = 100000;
 	float acc = 0.001f;
-	float real_val = -159.1038f;
+	float real_val = -9.1038f; // for N = 5
 
 	size_t dim = 3 * N;
 	float **p = new float *[dim + 1];
