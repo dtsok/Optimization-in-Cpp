@@ -1,6 +1,6 @@
 #include "nelder_mead.hpp"
 
-NelderMead::NelderMead(const size_t dimensions, float **points, float (*func)(const size_t, const float *))
+NelderMead::NelderMead(const size_t dimensions, double **points, double (*func)(const size_t, const double *))
 {
 	simplex = points;
 	N = dimensions;
@@ -18,7 +18,7 @@ NelderMead::~NelderMead()
 	delete[] best_point;
 }
 
-void NelderMead::setParameters(size_t iter, float accuracy, float real)
+void NelderMead::setParameters(size_t iter, double accuracy, double real)
 {
 	maxIterations = iter;
 	acc = accuracy;
@@ -40,7 +40,7 @@ void NelderMead::centerMass()
 int NelderMead::partition(int l, int h)
 {
 	int R = h;
-	float pivot = values[R];
+	double pivot = values[R];
 	int temp_right = l - 1;
 	for (int i = l; i <= h; i++) {
 		if (values[i] < pivot) {
@@ -67,7 +67,7 @@ void NelderMead::quicksort(int l, int h)
 	}
 }
 
-void NelderMead::generatePoint(float *x_op, const float r_op)
+void NelderMead::generatePoint(double *x_op, const double r_op)
 {
 
 	for (size_t i = 0; i < N; i++) {
@@ -75,7 +75,7 @@ void NelderMead::generatePoint(float *x_op, const float r_op)
 	}
 }
 
-void NelderMead::shrinkSimplex(float beta = .5f)
+void NelderMead::shrinkSimplex(double beta = .5f)
 {
 	for (size_t i = 1; i < N + 1; i++) {
 		for (size_t j = 0; j < N; j++) {
@@ -89,7 +89,7 @@ void NelderMead::shrinkSimplex(float beta = .5f)
 	}
 }
 
-void NelderMead::checkBeforeFree(float *other)
+void NelderMead::checkBeforeFree(double *other)
 {
 	for (size_t i = 0; i < N + 1; i++) {
 		if (simplex[i] == other) {
@@ -105,7 +105,7 @@ void NelderMead::resetSimplex()
 		reset_counter++;
 		for (size_t t = 0; t < N + 1; t++) {
 			for (size_t z = 0; z < N; z++) {
-				simplex[t][z] = RandomGenerator::generateFloat(-2.5f, 2.5f);
+				simplex[t][z] = RandomGenerator::generateDouble(-2.5, 2.5);
 			}
 		}
 	}
@@ -113,13 +113,13 @@ void NelderMead::resetSimplex()
 
 void NelderMead::minimize()
 {
-	values = new float[N + 1]();
-	cm = new float[N]();
-	x_inc = new float[N]();
-	x_ref = new float[N]();
-	x_exc = new float[N]();
-	x_exp = new float[N]();
-	best_point = new float[N]();
+	values = new double[N + 1]();
+	cm = new double[N]();
+	x_inc = new double[N]();
+	x_ref = new double[N]();
+	x_exc = new double[N]();
+	x_exp = new double[N]();
+	best_point = new double[N]();
 
 	for (size_t i = 0; i < N + 1; i++) {
 		// values[i] = ELJ(N, simplex[i]);
@@ -127,14 +127,14 @@ void NelderMead::minimize()
 	}
 	quicksort(0, N);
 
-	float of_value = values[0];
+	double of_value = values[0];
 	g_minimum = values[0];
 	while (of_value > acc + real_val && iterations < maxIterations) {
 		resetSimplex();
 		centerMass();
 		generatePoint(x_ref, r_ref);
-		// float x_ref_val = ELJ(N, x_ref);
-		float x_ref_val = function(N, x_ref);
+		// double x_ref_val = ELJ(N, x_ref);
+		double x_ref_val = function(N, x_ref);
 		if (x_ref_val >= values[0] && x_ref_val < values[N - 1]) {
 			std::copy(x_ref, x_ref + N, simplex[N]);
 			values[N] = x_ref_val;
@@ -142,8 +142,8 @@ void NelderMead::minimize()
 		}
 		else if (x_ref_val < values[0]) {
 			generatePoint(x_exp, r_exp);
-			// float x_exp_val = ELJ(N, x_exp);
-			float x_exp_val = function(N, x_exp);
+			// double x_exp_val = ELJ(N, x_exp);
+			double x_exp_val = function(N, x_exp);
 			if (x_exp_val < x_ref_val) {
 				std::copy(x_exp, x_exp + N, simplex[N]);
 				values[N] = x_exp_val;
@@ -157,8 +157,8 @@ void NelderMead::minimize()
 		}
 		else if (x_ref_val >= values[N - 1] && x_ref_val < values[N]) {
 			generatePoint(x_exc, r_exc);
-			// float x_exc_val = ELJ(N, x_exc);
-			float x_exc_val = function(N, x_exc);
+			// double x_exc_val = ELJ(N, x_exc);
+			double x_exc_val = function(N, x_exc);
 			if (x_exc_val <= x_ref_val) {
 				std::copy(x_exc, x_exc + N, simplex[N]);
 				values[N] = x_exc_val;
@@ -172,8 +172,8 @@ void NelderMead::minimize()
 		}
 		else if (values[N] <= x_ref_val) {
 			generatePoint(x_inc, r_inc);
-			// float x_inc_val = ELJ(N, x_inc);
-			float x_inc_val = function(N, x_inc);
+			// double x_inc_val = ELJ(N, x_inc);
+			double x_inc_val = function(N, x_inc);
 			if (x_inc_val < values[N]) {
 				std::copy(x_inc, x_inc + N, simplex[N]);
 				values[N] = x_inc_val;

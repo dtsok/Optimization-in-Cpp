@@ -2,10 +2,10 @@
 
 # Compiler and flags
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall
+CXXFLAGS = -std=c++17 -Wall -Werror -Wpedantic
 
 # Source and executable filenames
-SRCS = common/common_file.cpp Nelder-Mead/nelder_mead.cpp main.cpp
+SRCS = common/common_file.cpp Nelder-Mead/nelder_mead.cpp GA-Binary/ga_binary.cpp main.cpp
 OBJS = $(SRCS:.cpp=.o)
 EXEC = run
 

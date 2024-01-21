@@ -5,20 +5,21 @@
 #include <iostream>
 #include <random>
 
-float l2_norm(const float *X, const size_t i, const size_t j);
+double l2_norm(const double *X, const size_t i, const size_t j);
 
-float l2_norm_gen(float *x, float *y, const size_t N);
+double l2_norm_gen(double *x, double *y, const size_t N);
 
-float ELJ(const size_t N, const float *X);
+double ELJ(const size_t N, const double *X);
 
 class RandomGenerator {
 	public:
-	static float generateFloat(float l, float h);
+	static double generateDouble(double l, double h);
+	static int generateInt(double l, double h);
 
 	private:
 	static std::default_random_engine generator;
 };
 
-// float ELJ(const int N, const float *X, const float epsilon = 1, const float sigma = 1);
+// double ELJ(const int N, const double *X, const double epsilon = 1, const double sigma = 1);
 
 #endif // COMMON_FILE_HPP_
