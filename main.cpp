@@ -11,13 +11,13 @@ int main(int argc, char const *argv[])
 		return 0;
 	}
 
-	size_t maxIterations = 1000;
+	size_t maxIterations = 100000;
 	double acc = 0.001;
 	double real_val = -9.1038; // for N = 5
 
 	size_t dim = 3 * N;
 
-	/* // for Nelder-Mead
+	/* // Nelder-Mead
 	double **p = new double *[dim + 1];
 	for (size_t t = 0; t < dim + 1; t++) {
 		p[t] = new double[dim];
@@ -39,12 +39,7 @@ int main(int argc, char const *argv[])
 	*/
 
 	GA_Binary obj = GA_Binary(dim, &ELJ, -2.5, 2.5);
-	obj.setParameters(maxIterations, acc, real_val);
-	obj.initialize(dim);
-	obj.evaluate(obj.P, dim);
-	obj.selection();
-	////////for (size_t i = 0; i < dim; i++) {
-	////////	std::cout<<obj.values[i]<<"\n";
-	////////}
+	obj.setParameters(maxIterations, acc, real_val, 2 * dim);
+	obj.minimize(true);
 	return 0;
 }
