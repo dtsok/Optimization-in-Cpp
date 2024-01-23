@@ -1,3 +1,4 @@
+#include "GA-Binary/ga_binary.hpp"
 #include "Nelder-Mead/nelder_mead.hpp"
 
 int main(int argc, char const *argv[])
@@ -11,15 +12,17 @@ int main(int argc, char const *argv[])
 	}
 
 	size_t maxIterations = 100000;
-	float acc = 0.001f;
-	float real_val = -9.1038f; // for N = 5
+	double acc = 0.001;
+	double real_val = -9.1038; // for N = 5
 
 	size_t dim = 3 * N;
-	float **p = new float *[dim + 1];
+
+	/* // Nelder-Mead
+	double **p = new double *[dim + 1];
 	for (size_t t = 0; t < dim + 1; t++) {
-		p[t] = new float[dim];
+		p[t] = new double[dim];
 		for (size_t z = 0; z < dim; z++) {
-			p[t][z] = RandomGenerator::generateFloat(-2.5f, 2.5f);
+			p[t][z] = RandomGenerator::generateDouble(-2.5, 2.5);
 		}
 	}
 
@@ -33,5 +36,10 @@ int main(int argc, char const *argv[])
 		}
 	}
 	delete[] p;
+	*/
+
+	GA_Binary obj = GA_Binary(dim, &ELJ, -2.5, 2.5);
+	obj.setParameters(maxIterations, acc, real_val, 2 * dim);
+	obj.minimize(true);
 	return 0;
 }

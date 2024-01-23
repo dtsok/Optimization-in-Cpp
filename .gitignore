@@ -1,6 +1,7 @@
 settings.json
 main
 run
+.clang-format
 *.ods
 *.ods#
 *.txt
