@@ -1,7 +1,6 @@
 #include "GA-Binary/ga_binary.hpp"
 #include "GA-Real/ga_real.hpp"
 #include "Nelder-Mead/nelder_mead.hpp"
-#include <cmath>
 
 int main(int argc, char const *argv[])
 {
@@ -40,8 +39,8 @@ int main(int argc, char const *argv[])
 	delete[] p;
 	*/
 
-	GA_Real obj = GA_Real(dim, &ELJ, -2.5, 2.5);
+ 	GA_Real obj = GA_Real(dim, &ELJ, -2.5, 2.5);
 	obj.setParameters(maxIterations, acc, real_val, dim);
-	obj.minimize(true);
+	obj.minimize(false);
 	return 0;
 }

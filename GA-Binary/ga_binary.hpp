@@ -2,7 +2,6 @@
 #define GA_BINARY_HPP_
 
 #include "../common/common_file.hpp"
-#include <cstddef>
 #include <limits>
 #include <set>
 

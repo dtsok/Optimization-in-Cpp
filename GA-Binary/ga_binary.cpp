@@ -1,7 +1,5 @@
 #include "ga_binary.hpp"
 #include <algorithm>
-#include <cstddef>
-#include <cstdlib>
 #include <limits>
 #include <set>
 #include <vector>
@@ -110,7 +108,7 @@ void GA_Binary::evaluate(int **pop, double *val, size_t N)
 			best_value = val[i];
 			// std::copy(pop[i], pop[i] + total_bits, best);
 		}
-		else if (val[i] > worst_value) {
+		if (val[i] > worst_value) {
 			worst_value = val[i];
 			// std::copy(pop[i], pop[i] + total_bits, worst);
 		}
@@ -145,6 +143,12 @@ void GA_Binary::nonlinear_ranking(double *l_bounds)
 {
 	double *fitness = new double[populationSize]();
 	double total_fitness = 0;
+	worst_value = std::numeric_limits<double>::min();
+	for (size_t i = 0; i < populationSize; i++) {
+		if (p_values[i]>worst_value) {
+			worst_value = p_values[i];
+		}
+	}
 	for (size_t i = 0; i < populationSize; i++) {
 		fitness[i] = worst_value - p_values[i];
 		total_fitness += fitness[i];
@@ -253,7 +257,11 @@ void GA_Binary::crossover(double crop)
 		}
 	}
 
-	if (parents.size() % 2 != 0) {
+	if (parents.size() % 2 != 0 && parents.size() == populationSize) {
+		parents.pop_back();
+	}
+
+	while (parents.size() % 2 != 0 && parents.size() < populationSize) {
 		parents.push_back(RandomGenerator::generateInt(0, populationSize - 1));
 	}
 
@@ -280,9 +288,6 @@ void GA_Binary::mutation(double mutop)
 
 void GA_Binary::newPopulation()
 {
-	// double *selected_values = new double[populationSize]();
-	// evaluate(S, s_values, populationSize);
-
 	int *indicies_pop = new int[populationSize]();
 	int *indicies_selected = new int[populationSize]();
 	for (size_t i = 0; i < populationSize; i++) {
@@ -299,11 +304,11 @@ void GA_Binary::newPopulation()
 	size_t ind_2 = 0;
 	while (current < populationSize) {
 		temp[current] = new int[total_bits]();
-		if (p_values[indicies_pop[ind_1]] < s_values[indicies_selected[ind_2]] && ind_1 < total_bits) {
+		if (p_values[indicies_pop[ind_1]] < s_values[indicies_selected[ind_2]] && ind_1 < populationSize) {
 			std::copy(P[indicies_pop[ind_1]], P[indicies_pop[ind_1]] + total_bits, temp[current]);
 			ind_1++;
 		}
-		else if (p_values[indicies_pop[ind_1]] > s_values[indicies_selected[ind_2]] && ind_2 < total_bits) {
+		else if (p_values[indicies_pop[ind_1]] > s_values[indicies_selected[ind_2]] && ind_2 < populationSize) {
 			std::copy(S[indicies_selected[ind_2]], S[indicies_selected[ind_2]] + total_bits, temp[current]);
 			ind_2++;
 		}
@@ -327,12 +332,11 @@ void GA_Binary::minimize(bool tour)
 {
 	initialize();
 	evaluate(P, p_values, populationSize);
-	double crossover_rate = 0.2;
-	double mutation_rate = 0.1;
+	double crossover_rate = 0.35;
+	double mutation_rate = 0.10;
 	//	bool flag = true;
 	size_t iter = 0;
 	while (best_value > real_val + acc && iter < maxIterations) {
-		// double prev_ = best_value;
 		if (tour) {
 			tournament_selection(populationSize / 2);
 		}
@@ -349,10 +353,7 @@ void GA_Binary::minimize(bool tour)
 		evaluate(S, s_values, populationSize);
 		newPopulation();
 		evaluate(P, p_values, populationSize);
-		// if (best_value < prev_) {
 		std::cout << iter << ": " << best_value << "\n";
-		//	prev_ = best_value;
-		//}
 		iter++;
 	}
 	std::cout << iter << ": " << best_value << "\n";
