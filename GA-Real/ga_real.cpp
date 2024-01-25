@@ -1,10 +1,18 @@
-#include "ga_binary.hpp"
+#include "ga_real.hpp"
 #include <algorithm>
+#include <cstddef>
+#include <cstdlib>
 #include <limits>
-#include <set>
-#include <vector>
 
-GA_Binary::~GA_Binary()
+
+GA_Real::GA_Real(size_t dimensions, double (*func)(const size_t, const double *), double l, double h){
+	dim = dimensions;
+	function = func;
+	this->l=l;
+	this->h=h;
+}
+
+GA_Real::~GA_Real()
 {
 	if (P != nullptr) {
 		for (size_t i = 0; i < populationSize; i++) {
@@ -36,89 +44,55 @@ GA_Binary::~GA_Binary()
 	}
 }
 
-GA_Binary::GA_Binary(size_t dimensions, double (*func)(const size_t, const double *), double l, double h)
-{
-	dim = dimensions;
-	function = func;
-	this->l = l;
-	this->h = h;
-}
 
-void GA_Binary::setParameters(size_t iterations, double acc, double real_val, size_t popSize)
+void GA_Real::setParameters(size_t iterations, double acc, double real_val, size_t popSize)
 {
 	maxIterations = iterations;
 	this->acc = acc;
 	this->real_val = real_val;
 	populationSize = popSize;
 
-	// total numbers that can be represented in the range (l,h) with step=acc
-	size_t numbers_in_lh = 1 + (h - l) / acc;
-	// number of bits needed for the representation of "number_in_lh" numbers
-	size_t high = 2;
-	while (numbers_in_lh > high) {
-		total_bits++;
-		high *= 2;
-	}
-	total_bits++;
-	bits_per_num = total_bits;
-	// total_bits = dimensions*bits for 1 number
-	total_bits *= dim;
 }
 
-double GA_Binary::decode(int *point, size_t offset) // convert binary to real
+void GA_Real::initialize()
 {
-	double z = 0;
-	for (size_t i = 0; i < bits_per_num; i++) {
-		z += point[i + offset] * std::pow(2, i);
-	}
-	return l + z * (h - l) / (std::pow(2, bits_per_num) - 1);
-}
-
-void GA_Binary::initialize()
-{
-	P = new int *[populationSize];
+	P = new double*[populationSize];
 	p_values = new double[populationSize]();
 
-	S = new int *[populationSize];
+	S = new double*[populationSize];
 	s_values = new double[populationSize]();
 
-	best = new int[total_bits]();
-	worst = new int[total_bits]();
+	best = new double[dim]();
+	worst = new double[dim]();
 
 	for (size_t i = 0; i < populationSize; i++) {
-		P[i] = new int[total_bits];
-		S[i] = new int[total_bits];
-		for (size_t j = 0; j < total_bits; j++) {
-			P[i][j] = RandomGenerator::generateInt(0, 1);
+		P[i] = new double[dim];
+		S[i] = new double[dim];
+		for (size_t j = 0; j < dim; j++) {
+			P[i][j] = RandomGenerator::generateDouble(l, h);
 			S[i][j] = 0;
 		}
 	}
 }
 
-void GA_Binary::evaluate(int **pop, double *val, size_t N)
+void GA_Real::evaluate(double **pop, double *val, size_t N)
 {
-	double *storeRealVector = new double[dim]();
+	worst_value = std::numeric_limits<double>::min();
 	for (size_t i = 0; i < N; i++) {
-		size_t index = 0;
-		for (size_t j = 0; j < total_bits; j += bits_per_num) {
-			storeRealVector[index++] = decode(pop[i], j);
-		}
-		val[i] = function(dim, storeRealVector);
+		val[i] = function(dim, pop[i]);
 		if (val[i] < best_value) {
 			best_value = val[i];
 			// std::copy(pop[i], pop[i] + total_bits, best);
 		}
 		if (val[i] > worst_value) {
 			worst_value = val[i];
-			// std::copy(pop[i], pop[i] + total_bits, worst);
+		
 		}
-		// std::cout << "values = " << val[i] << "\n";
 	}
 	// std::cout<<"best "<<best_value<<" worst "<<worst_value<<"\n";
-	delete[] storeRealVector;
 }
 
-void GA_Binary::tournament_selection(size_t tourSize)
+void GA_Real::tournament_selection(size_t tourSize)
 {
 	std::set<size_t> members;
 	for (size_t i = 0; i < populationSize; i++) {
@@ -135,15 +109,14 @@ void GA_Binary::tournament_selection(size_t tourSize)
 			}
 		}
 
-		std::copy(P[best_index], P[best_index] + total_bits, S[i]);
+		std::copy(P[best_index], P[best_index] + dim, S[i]);
 	}
 }
 
-void GA_Binary::nonlinear_ranking(double *l_bounds)
+void GA_Real::nonlinear_ranking(double *l_bounds)
 {
 	double *fitness = new double[populationSize]();
 	double total_fitness = 0;
-	worst_value = std::numeric_limits<double>::min();
 	for (size_t i = 0; i < populationSize; i++) {
 		if (p_values[i]>worst_value) {
 			worst_value = p_values[i];
@@ -164,7 +137,7 @@ void GA_Binary::nonlinear_ranking(double *l_bounds)
 	delete[] fitness;
 }
 
-void GA_Binary::linear_ranking(double *l_bounds)
+void GA_Real::linear_ranking(double *l_bounds)
 {
 	double sp = 1.5; // selective pressure
 	double *fitness = new double[populationSize]();
@@ -190,7 +163,7 @@ void GA_Binary::linear_ranking(double *l_bounds)
 	delete[] fitness;
 }
 
-void GA_Binary::roulette_wheel_selection(bool linear)
+void GA_Real::roulette_wheel_selection(bool linear)
 {
 	double *l_bounds = new double[populationSize]();
 
@@ -206,7 +179,7 @@ void GA_Binary::roulette_wheel_selection(bool linear)
 		double r = RandomGenerator::generateDouble(0, 1);
 		for (size_t j = 1; j < populationSize; j++) {
 			if (r <= l_bounds[j]) {
-				std::copy(P[j - 1], P[j - 1] + total_bits, S[index]);
+				std::copy(P[j - 1], P[j - 1] + dim, S[index]);
 				index++;
 				break;
 			}
@@ -217,38 +190,31 @@ void GA_Binary::roulette_wheel_selection(bool linear)
 	delete[] l_bounds;
 }
 
-void GA_Binary::crossoverAndUpdate(const size_t p1, const size_t p2, const std::set<size_t> &ind)
-{
-	bool flag = true;
-	size_t current = 0; // starting index
-	for (const size_t &index : ind) {
-		while (current < index) {
-			if (flag) {
-				std::swap(S[p1][current], S[p2][current]);
-			}
-			current++;
+void GA_Real::crossoverAndUpdate(const size_t p1, const size_t p2, const double delta){
+	double *descendant = new double[dim]();
+	for (size_t i = 0; i < dim; i++) {
+		double r = RandomGenerator::generateDouble(-delta, 1+delta);
+		descendant[i] = r*S[p1][i] + (1-r)*S[p2][i];
+		if (descendant[i] < l) {
+			descendant[i] = l;
 		}
-		flag = flag ? false : true;
+		else if (descendant[i] > h) {
+			descendant[i] = h;
+		}
+	}
+	if (p_values[p1] < p_values[p2]) {
+		std::copy(descendant, descendant+dim, S[p2]);
+	}
+	else {
+		std::copy(descendant, descendant+dim, S[p1]);
 	}
 
-	// swap rest elements if needed
-	if ((current < total_bits - 1) && flag) {
-		for (size_t i = current; i < total_bits; i++) {
-			std::swap(S[p1][i], S[p2][i]);
-		}
-	}
+	delete [] descendant;
 }
 
-void GA_Binary::crossover(double crop)
-{
-	// number of crossover points and corresponding places
-	size_t k = dim;
-	// size_t k = 10;
-	std::set<size_t> indicies;
-	for (size_t i = 0; i < k; i++) {
-		indicies.insert(RandomGenerator::generateInt(1, total_bits - 2));
-	}
-
+void GA_Real::crossover(double crop){
+	double delta = 0.15; // used in order to avoid gradual shrinkage
+	
 	std::vector<size_t> parents;
 	for (size_t i = 0; i < populationSize; i++) {
 		double r = RandomGenerator::generateDouble(0, 1);
@@ -266,28 +232,34 @@ void GA_Binary::crossover(double crop)
 	}
 
 	for (size_t i = 0; i < parents.size(); i += 2) {
-		crossoverAndUpdate(parents[i], parents[i + 1], indicies);
+		crossoverAndUpdate(parents[i], parents[i + 1], delta);
 	}
+
 }
 
-void GA_Binary::mutation(double mutop)
-{
+void GA_Real::mutation(double mutop){
 	for (size_t i = 0; i < populationSize; i++) {
-		for (size_t j = 0; j < total_bits; j++) {
-			if (RandomGenerator::generateDouble(0, 1) < mutop) {
-				if (S[i][j]) {
-					S[i][j] = 0;
+		for (size_t j = 0; j < dim; j++) {
+			if (RandomGenerator::generateDouble(0, 1)<mutop) {
+				double alpha = std::min(l+std::abs(S[i][j]), h - std::abs(S[i][j]));
+				double z = RandomGenerator::generateDouble(-alpha, alpha);
+				S[i][j] += z;
+				if (S[i][j] < l) {
+					S[i][j] = l;
 				}
-				else {
-					S[i][j] = 1;
+				else if (S[i][j] > h) {
+					S[i][j] = h;
 				}
 			}
 		}
 	}
 }
 
-void GA_Binary::newPopulation()
+void GA_Real::newPopulation()
 {
+	// double *selected_values = new double[populationSize]();
+	// evaluate(S, s_values, populationSize);
+
 	int *indicies_pop = new int[populationSize]();
 	int *indicies_selected = new int[populationSize]();
 	for (size_t i = 0; i < populationSize; i++) {
@@ -298,25 +270,25 @@ void GA_Binary::newPopulation()
 
 	std::sort(indicies_selected, indicies_selected + populationSize, [&](const int &a, const int &b) { return (s_values[a] < s_values[b]); });
 
-	int **temp = new int *[populationSize];
+	double **temp = new double *[populationSize];
 	size_t current = 0;
 	size_t ind_1 = 0;
 	size_t ind_2 = 0;
 	while (current < populationSize) {
-		temp[current] = new int[total_bits]();
-		if (p_values[indicies_pop[ind_1]] < s_values[indicies_selected[ind_2]] && ind_1 < populationSize) {
-			std::copy(P[indicies_pop[ind_1]], P[indicies_pop[ind_1]] + total_bits, temp[current]);
-			ind_1++;
-		}
-		else if (p_values[indicies_pop[ind_1]] > s_values[indicies_selected[ind_2]] && ind_2 < populationSize) {
-			std::copy(S[indicies_selected[ind_2]], S[indicies_selected[ind_2]] + total_bits, temp[current]);
-			ind_2++;
-		}
+		temp[current] = new double[dim]();
+		std::copy(P[indicies_pop[ind_1]], P[indicies_pop[ind_1]] + dim, temp[current]);
+		ind_1++;
 		current++;
+		if (current < populationSize) {
+			temp[current] = new double[dim]();
+			std::copy(S[indicies_selected[ind_2]], S[indicies_selected[ind_2]] + dim, temp[current]);
+			ind_2++;
+			current++;
+		}
 	}
 
 	for (size_t i = 0; i < populationSize; i++) {
-		std::copy(temp[i], temp[i] + total_bits, P[i]);
+		std::copy(temp[i], temp[i] + dim, P[i]);
 	}
 
 	for (size_t i = 0; i < populationSize; i++) {
@@ -328,27 +300,23 @@ void GA_Binary::newPopulation()
 	delete[] indicies_selected;
 }
 
-void GA_Binary::minimize(bool tour)
+void GA_Real::minimize(bool tour)
 {
 	initialize();
 	evaluate(P, p_values, populationSize);
-	double crossover_rate = 0.35;
-	double mutation_rate = 0.10;
+	double crossover_rate = 0.5;
+	double mutation_rate = 0.2;
 	//	bool flag = true;
 	size_t iter = 0;
 	while (best_value > real_val + acc && iter < maxIterations) {
+		// double prev_ = best_value;
 		if (tour) {
 			tournament_selection(populationSize / 2);
 		}
 		else {
-			roulette_wheel_selection(false);
+			roulette_wheel_selection(true);
 		}
-		/*if (best_value + std::abs(real_val) < 0.05 && flag) {
-			crossover_rate = 0.25;
-			mutation_rate = 0.35;
-			flag = false;
-		}*/
-		crossover(crossover_rate);
+			crossover(crossover_rate);
 		mutation(mutation_rate);
 		evaluate(S, s_values, populationSize);
 		newPopulation();

@@ -1,4 +1,5 @@
 #include "GA-Binary/ga_binary.hpp"
+#include "GA-Real/ga_real.hpp"
 #include "Nelder-Mead/nelder_mead.hpp"
 
 int main(int argc, char const *argv[])
@@ -11,9 +12,9 @@ int main(int argc, char const *argv[])
 		return 0;
 	}
 
-	size_t maxIterations = 100000;
+	size_t maxIterations = 500000;
 	double acc = 0.001;
-	double real_val = -9.1038; // for N = 5
+	double real_val = -9.10385; // for N = 5
 
 	size_t dim = 3 * N;
 
@@ -38,8 +39,8 @@ int main(int argc, char const *argv[])
 	delete[] p;
 	*/
 
-	GA_Binary obj = GA_Binary(dim, &ELJ, -2.5, 2.5);
-	obj.setParameters(maxIterations, acc, real_val, 2 * dim);
-	obj.minimize(true);
+ 	GA_Real obj = GA_Real(dim, &ELJ, -2.5, 2.5);
+	obj.setParameters(maxIterations, acc, real_val, dim);
+	obj.minimize(false);
 	return 0;
 }
