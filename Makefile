@@ -5,7 +5,7 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Werror -Wpedantic -O3
 
 # Source and executable filenames
-SRCS = common/common_file.cpp Nelder-Mead/nelder_mead.cpp GA-Binary/ga_binary.cpp GA-Real/ga_real.cpp main.cpp
+SRCS = common/common_file.cpp Nelder-Mead/nelder_mead.cpp GA-Binary/ga_binary.cpp PSO/pso.cpp GA-Real/ga_real.cpp main.cpp
 OBJS = $(SRCS:.cpp=.o)
 EXEC = run
 

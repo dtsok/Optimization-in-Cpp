@@ -1,6 +1,7 @@
 #include "GA-Binary/ga_binary.hpp"
 #include "GA-Real/ga_real.hpp"
 #include "Nelder-Mead/nelder_mead.hpp"
+#include "PSO/pso.hpp"
 
 int main(int argc, char const *argv[])
 {
@@ -12,7 +13,7 @@ int main(int argc, char const *argv[])
 		return 0;
 	}
 
-	size_t maxIterations = 500000;
+	size_t maxIterations = 100000 * N;
 	double acc = 0.001;
 	double real_val = -9.10385; // for N = 5
 
@@ -39,8 +40,8 @@ int main(int argc, char const *argv[])
 	delete[] p;
 	*/
 
- 	GA_Real obj = GA_Real(dim, &ELJ, -2.5, 2.5);
+	PSO obj = PSO(dim, &ELJ, -2.5, 2.5);
 	obj.setParameters(maxIterations, acc, real_val, dim);
-	obj.minimize(false);
+	obj.minimize(true);
 	return 0;
 }

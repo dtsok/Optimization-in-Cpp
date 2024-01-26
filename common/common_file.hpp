@@ -3,7 +3,12 @@
 
 #include <cmath>
 #include <iostream>
+#include <cstddef>
+#include <limits>
 #include <random>
+#include <algorithm>
+#include <set>
+#include <vector>
 
 double l2_norm(const double *X, const size_t i, const size_t j);
 
