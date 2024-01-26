@@ -1,15 +1,11 @@
 #include "ga_real.hpp"
-#include <algorithm>
-#include <cstddef>
-#include <cstdlib>
-#include <limits>
 
-
-GA_Real::GA_Real(size_t dimensions, double (*func)(const size_t, const double *), double l, double h){
+GA_Real::GA_Real(size_t dimensions, double (*func)(const size_t, const double *), double l, double h)
+{
 	dim = dimensions;
 	function = func;
-	this->l=l;
-	this->h=h;
+	this->l = l;
+	this->h = h;
 }
 
 GA_Real::~GA_Real()
@@ -44,22 +40,20 @@ GA_Real::~GA_Real()
 	}
 }
 
-
 void GA_Real::setParameters(size_t iterations, double acc, double real_val, size_t popSize)
 {
 	maxIterations = iterations;
 	this->acc = acc;
 	this->real_val = real_val;
 	populationSize = popSize;
-
 }
 
 void GA_Real::initialize()
 {
-	P = new double*[populationSize];
+	P = new double *[populationSize];
 	p_values = new double[populationSize]();
 
-	S = new double*[populationSize];
+	S = new double *[populationSize];
 	s_values = new double[populationSize]();
 
 	best = new double[dim]();
@@ -86,7 +80,6 @@ void GA_Real::evaluate(double **pop, double *val, size_t N)
 		}
 		if (val[i] > worst_value) {
 			worst_value = val[i];
-		
 		}
 	}
 	// std::cout<<"best "<<best_value<<" worst "<<worst_value<<"\n";
@@ -118,7 +111,7 @@ void GA_Real::nonlinear_ranking(double *l_bounds)
 	double *fitness = new double[populationSize]();
 	double total_fitness = 0;
 	for (size_t i = 0; i < populationSize; i++) {
-		if (p_values[i]>worst_value) {
+		if (p_values[i] > worst_value) {
 			worst_value = p_values[i];
 		}
 	}
@@ -190,11 +183,12 @@ void GA_Real::roulette_wheel_selection(bool linear)
 	delete[] l_bounds;
 }
 
-void GA_Real::crossoverAndUpdate(const size_t p1, const size_t p2, const double delta){
+void GA_Real::crossoverAndUpdate(const size_t p1, const size_t p2, const double delta)
+{
 	double *descendant = new double[dim]();
 	for (size_t i = 0; i < dim; i++) {
-		double r = RandomGenerator::generateDouble(-delta, 1+delta);
-		descendant[i] = r*S[p1][i] + (1-r)*S[p2][i];
+		double r = RandomGenerator::generateDouble(-delta, 1 + delta);
+		descendant[i] = r * S[p1][i] + (1 - r) * S[p2][i];
 		if (descendant[i] < l) {
 			descendant[i] = l;
 		}
@@ -203,18 +197,19 @@ void GA_Real::crossoverAndUpdate(const size_t p1, const size_t p2, const double 
 		}
 	}
 	if (p_values[p1] < p_values[p2]) {
-		std::copy(descendant, descendant+dim, S[p2]);
+		std::copy(descendant, descendant + dim, S[p2]);
 	}
 	else {
-		std::copy(descendant, descendant+dim, S[p1]);
+		std::copy(descendant, descendant + dim, S[p1]);
 	}
 
-	delete [] descendant;
+	delete[] descendant;
 }
 
-void GA_Real::crossover(double crop){
+void GA_Real::crossover(double crop)
+{
 	double delta = 0.15; // used in order to avoid gradual shrinkage
-	
+
 	std::vector<size_t> parents;
 	for (size_t i = 0; i < populationSize; i++) {
 		double r = RandomGenerator::generateDouble(0, 1);
@@ -234,14 +229,14 @@ void GA_Real::crossover(double crop){
 	for (size_t i = 0; i < parents.size(); i += 2) {
 		crossoverAndUpdate(parents[i], parents[i + 1], delta);
 	}
-
 }
 
-void GA_Real::mutation(double mutop){
+void GA_Real::mutation(double mutop)
+{
 	for (size_t i = 0; i < populationSize; i++) {
 		for (size_t j = 0; j < dim; j++) {
-			if (RandomGenerator::generateDouble(0, 1)<mutop) {
-				double alpha = std::min(l+std::abs(S[i][j]), h - std::abs(S[i][j]));
+			if (RandomGenerator::generateDouble(0, 1) < mutop) {
+				double alpha = std::min(l + std::abs(S[i][j]), h - std::abs(S[i][j]));
 				double z = RandomGenerator::generateDouble(-alpha, alpha);
 				S[i][j] += z;
 				if (S[i][j] < l) {
@@ -316,7 +311,7 @@ void GA_Real::minimize(bool tour)
 		else {
 			roulette_wheel_selection(true);
 		}
-			crossover(crossover_rate);
+		crossover(crossover_rate);
 		mutation(mutation_rate);
 		evaluate(S, s_values, populationSize);
 		newPopulation();

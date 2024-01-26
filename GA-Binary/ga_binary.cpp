@@ -1,8 +1,4 @@
 #include "ga_binary.hpp"
-#include <algorithm>
-#include <limits>
-#include <set>
-#include <vector>
 
 GA_Binary::~GA_Binary()
 {
@@ -145,7 +141,7 @@ void GA_Binary::nonlinear_ranking(double *l_bounds)
 	double total_fitness = 0;
 	worst_value = std::numeric_limits<double>::min();
 	for (size_t i = 0; i < populationSize; i++) {
-		if (p_values[i]>worst_value) {
+		if (p_values[i] > worst_value) {
 			worst_value = p_values[i];
 		}
 	}

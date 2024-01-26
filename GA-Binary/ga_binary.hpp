@@ -2,8 +2,6 @@
 #define GA_BINARY_HPP_
 
 #include "../common/common_file.hpp"
-#include <limits>
-#include <set>
 
 class GA_Binary {
 	public:

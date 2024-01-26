@@ -2,8 +2,6 @@
 #define GA_REAL_HPP_
 
 #include "../common/common_file.hpp"
-#include <cstddef>
-#include <set>
 
 class GA_Real {
 	public:
@@ -24,7 +22,7 @@ class GA_Real {
 
 	size_t populationSize = 0; // same for every operator/phase of algorithm
 
-	double **P = nullptr;			// population
+	double **P = nullptr;		// population
 	double *p_values = nullptr; // population's evaluated values (function(p[i]))
 
 	double *best = nullptr; // store best vector (optional)
@@ -37,7 +35,7 @@ class GA_Real {
 
 	void evaluate(double **pop, double *val, size_t N); // given Population "pop" evaluate the values and store them in "val"
 
-	double **S = nullptr;			// selected population
+	double **S = nullptr;		// selected population
 	double *s_values = nullptr; // selected's evaluated values
 
 	void roulette_wheel_selection(bool linear);
@@ -45,7 +43,7 @@ class GA_Real {
 	void nonlinear_ranking(double *l_bounds);
 	void tournament_selection(size_t tourSize);
 
-	void crossoverAndUpdate(const size_t p1, const size_t p2, const double delta=0.25);
+	void crossoverAndUpdate(const size_t p1, const size_t p2, const double delta = 0.25);
 	void crossover(double crop);
 
 	void mutation(double mutop);
